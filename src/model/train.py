@@ -3,15 +3,29 @@
 import argparse
 import glob
 import os
+import logging
 
 import pandas as pd
+import numpy as np
+
+import mlflow
+import mlflow.sklearn
 
 from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split
 
 
 # define functions
 def main(args):
     # TO DO: enable autologging
+
+    mlflow.autolog()
+    # logging.basicConfig(
+    #     level=logging.INFO,
+    #     format="%(asctime)s - %(levelname)s - %(message)s"
+    # )
+
+    # logging.info("Starting training job")
 
 
     # read data
@@ -23,6 +37,8 @@ def main(args):
     # train model
     train_model(args.reg_rate, X_train, X_test, y_train, y_test)
 
+    # logging.info("Training completed successfully")
+
 
 def get_csvs_df(path):
     if not os.path.exists(path):
@@ -33,7 +49,23 @@ def get_csvs_df(path):
     return pd.concat((pd.read_csv(f) for f in csv_files), sort=False)
 
 
-# TO DO: add function to split data
+def split_data(df):
+    # split into feature and target 
+    X = df[['Pregnancies','PlasmaGlucose','DiastolicBloodPressure','TricepsThickness','SerumInsulin','BMI','DiabetesPedigree','Age']].values
+    y = df['Diabetic'].values
+
+    # Check lengths of full dataset
+    print(f'Dataset size: {len(X)}')
+
+    # Check unique valus of target variable
+    y_check = np.unique(y, return_counts=True)
+    for i_value, y_value in enumerate(y_check[0]):
+        print(f'Unique target value: {y_value}, Counts: {y_check[1][i_value]}\n')
+
+
+    # Split into training and testing set
+    return train_test_split(X, y, test_size=0.30, random_state=0)
+
 
 
 def train_model(reg_rate, X_train, X_test, y_train, y_test):
